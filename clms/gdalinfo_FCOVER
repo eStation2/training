@@ -1,0 +1,132 @@
+Driver: netCDF/Network Common Data Format
+Files: 20250510/c_gls_FCOVER300-RT0_202505100000_AFRI_OLCI_V1.1.1.nc
+Size is 30240, 26880
+Coordinate System is:
+BOUNDCRS[
+    SOURCECRS[
+        GEOGCRS["WGS 84",
+            DATUM["World Geodetic System 1984",
+                ELLIPSOID["WGS 84",6378137,298.257223563,
+                    LENGTHUNIT["metre",1]]],
+            PRIMEM["Greenwich",0,
+                ANGLEUNIT["degree",0.0174532925199433]],
+            CS[ellipsoidal,2],
+                AXIS["geodetic latitude (Lat)",north,
+                    ORDER[1],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+                AXIS["geodetic longitude (Lon)",east,
+                    ORDER[2],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+            ID["EPSG",4326]]],
+    TARGETCRS[
+        GEOGCRS["WGS 84",
+            DATUM["World Geodetic System 1984",
+                ELLIPSOID["WGS 84",6378137,298.257223563,
+                    LENGTHUNIT["metre",1]]],
+            PRIMEM["Greenwich",0,
+                ANGLEUNIT["degree",0.0174532925199433]],
+            CS[ellipsoidal,2],
+                AXIS["latitude",north,
+                    ORDER[1],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+                AXIS["longitude",east,
+                    ORDER[2],
+                    ANGLEUNIT["degree",0.0174532925199433]],
+            ID["EPSG",4326]]],
+    ABRIDGEDTRANSFORMATION["Transformation from WGS 84 to WGS84",
+        METHOD["Position Vector transformation (geog2D domain)",
+            ID["EPSG",9606]],
+        PARAMETER["X-axis translation",0,
+            ID["EPSG",8605]],
+        PARAMETER["Y-axis translation",0,
+            ID["EPSG",8606]],
+        PARAMETER["Z-axis translation",0,
+            ID["EPSG",8607]],
+        PARAMETER["X-axis rotation",0,
+            ID["EPSG",8608]],
+        PARAMETER["Y-axis rotation",0,
+            ID["EPSG",8609]],
+        PARAMETER["Z-axis rotation",0,
+            ID["EPSG",8610]],
+        PARAMETER["Scale difference",1,
+            ID["EPSG",8611]]]]
+Data axis to CRS axis mapping: 2,1
+Origin = (-30.001488094555981,40.001488095247190)
+Pixel Size = (0.002976190476204,-0.002976190476190)
+Metadata:
+  crs#grid_mapping_name=latitude_longitude
+  crs#inverse_flattening=298.257223563
+  crs#longitude_of_prime_meridian=0
+  crs#long_name=coordinate reference system
+  crs#semi_major_axis=6378137
+  crs#spatial_ref=GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9108"]],AUTHORITY["EPSG","4326"]]
+  crs#_CoordinateAxisTypes=GeoX GeoY
+  crs#_CoordinateTransformType=Projection
+  FCOVER#add_offset=0
+  FCOVER#grid_mapping=crs
+  FCOVER#long_name=Fraction of green Vegetation Cover 333m
+  FCOVER#missing_value=255
+  FCOVER#scale_factor=0.004
+  FCOVER#standard_name=vegetation_area_fraction
+  FCOVER#units=
+  FCOVER#valid_range={0,250}
+  FCOVER#_FillValue=255
+  lat#axis=Y
+  lat#DIMENSION_LABELS=lat
+  lat#long_name=latitude
+  lat#standard_name=latitude
+  lat#units=degrees_north
+  lat#_CoordinateAxisType=Lat
+  lon#axis=X
+  lon#DIMENSION_LABELS=lon
+  lon#long_name=longitude
+  lon#standard_name=longitude
+  lon#units=degrees_east
+  lon#_CoordinateAxisType=Lon
+  NC_GLOBAL#archive_facility=VITO
+  NC_GLOBAL#Conventions=CF-1.6
+  NC_GLOBAL#copyright=Copernicus Service information 2025
+  NC_GLOBAL#history=2025-06-23:  Processing line GEO
+  NC_GLOBAL#identifier=urn:cgls:africa:fcover300_v1_333m:FCOVER300-RT0_202505100000_AFRI_OLCI_V1.1.1
+  NC_GLOBAL#institution=VITO NV
+  NC_GLOBAL#long_name=Fraction of green Vegetation Cover
+  NC_GLOBAL#orbit_type=LEO
+  NC_GLOBAL#parent_identifier=urn:cgls:africa:fcover300_v1_333m
+  NC_GLOBAL#platform=Sentinel-3
+  NC_GLOBAL#processing_level=L3
+  NC_GLOBAL#processing_mode=Near Real Time
+  NC_GLOBAL#product_version=V1.1.1
+  NC_GLOBAL#references=https://land.copernicus.eu/global/products/fcover
+  NC_GLOBAL#sensor=OLCI
+  NC_GLOBAL#source=Derived from EO satellite imagery
+  NC_GLOBAL#time_coverage_end=2025-05-10T23:59:59Z
+  NC_GLOBAL#time_coverage_start=2024-10-12T00:00:00Z
+  NC_GLOBAL#title=10-daily Fraction of Vegetation Cover 333M: AFRI 2025-05-10T00:00:00Z
+  NETCDF_DIM_EXTRA={time}
+  NETCDF_DIM_time_DEF={1,6}
+  NETCDF_DIM_time_VALUES=20218
+  time#axis=T
+  time#calendar=standard
+  time#long_name=Time
+  time#units=days since 1970-01-01 00:00:00
+Corner Coordinates:
+Upper Left  ( -30.0014881,  40.0014881) ( 30d 0' 5.36"W, 40d 0' 5.36"N)
+Lower Left  ( -30.0014881, -39.9985119) ( 30d 0' 5.36"W, 39d59'54.64"S)
+Upper Right (  59.9985119,  40.0014881) ( 59d59'54.64"E, 40d 0' 5.36"N)
+Lower Right (  59.9985119, -39.9985119) ( 59d59'54.64"E, 39d59'54.64"S)
+Center      (  14.9985119,   0.0014881) ( 14d59'54.64"E,  0d 0' 5.36"N)
+Band 1 Block=2160x1920 Type=Byte, ColorInterp=Undefined
+  NoData Value=255
+  Offset: 0,   Scale:0.004
+  Metadata:
+    add_offset=0
+    grid_mapping=crs
+    long_name=Fraction of green Vegetation Cover 333m
+    missing_value=255
+    NETCDF_DIM_time=20218
+    NETCDF_VARNAME=FCOVER
+    scale_factor=0.004
+    standard_name=vegetation_area_fraction
+    units=
+    valid_range={0,250}
+    _FillValue=255
