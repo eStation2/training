@@ -53,7 +53,7 @@ def run_ndvi_clipper(roi="AFRI"):
     file_path_dir = os.path.join(base_dir, year, month, day)
 
     # Filename format: c_gls_NDVI300_YYYYMMDD0000_GLOBE_OLCI_V2.0.1_nc
-    filename = f"c_gls_NDVI300_{year}{month}{day}0000_GLOBE_OLCI_V2.0.1_nc"
+    filename = f"c_gls_NDVI300_{year}{month}{day}0000_GLOBE_OLCI_V2.0.1_nc/c_gls_NDVI300_{year}{month}{day}0000_GLOBE_OLCI_V2.0.1.nc"
 
     # Full argument to pass to the script
     full_argument = os.path.join(file_path_dir, filename)
@@ -107,7 +107,7 @@ def run_dmp_clipper(roi="AFRI"):
     file_path_dir = os.path.join(base_dir, year, month, day)
 
     # Filename format: c_gls_NDVI300_YYYYMMDD0000_GLOBE_OLCI_V2.0.1_nc
-    filename = f"c_gls_DMP300-RT0_{year}{month}{day}0000_GLOBE_OLCI_V1.1.1_nc"
+    filename = f"c_gls_DMP300-RT0_{year}{month}{day}0000_GLOBE_OLCI_V1.1.1_nc/c_gls_DMP300-RT0_{year}{month}{day}0000_GLOBE_OLCI_V1.1.1.nc"
 
     # Full argument to pass to the script
     full_argument = os.path.join(file_path_dir, filename)
@@ -194,7 +194,7 @@ def run_vegetation_properties_clipper(var="FAPAR", roi="AFRI"):
     file_path_dir = os.path.join(base_dir, year, month, day)
 
     # Filename format: c_gls_FAPAR300-RT0_YYYYMMDD0000_GLOBE_OLCI_V1.1.1_nc
-    filename = f"c_gls_{var}300-RT0_{year}{month}{day}0000_GLOBE_OLCI_V1.1.1_nc"
+    filename = f"c_gls_{var}300-RT0_{year}{month}{day}0000_GLOBE_OLCI_V1.1.1_nc/c_gls_{var}300-RT0_{year}{month}{day}0000_GLOBE_OLCI_V1.1.1.nc"
 
     # Full argument to pass to the script
     full_argument = os.path.join(file_path_dir, filename)
