@@ -533,7 +533,7 @@ def replace_xml_parameters_lxml(xml_file_path, params_dict, output_file_path=Non
             #namespaces=namespaces
         ).decode()
 
-def thumbnail_view(filename, thumbFilename):
+def thumbnail_view(filename, thumbFilename, colorTable):
      # parser = argparse.ArgumentParser(prog='create quicklook based on json config file')
     # parser.add_argument('--cfgFile', type=str, 
     #                     help='the input configuration file')
@@ -542,7 +542,7 @@ def thumbnail_view(filename, thumbFilename):
     qlDict = {
         "inFilename"    : filename, 
         "outFilename"   : thumbFilename,
-        "colorTable"    : "cgl_colorTable_FCOVER.txt",
+        "colorTable"    : colorTable,
         "ql_Subsample"  : [5,5],
         "ql_Min"        : 0,
         "ql_Max"        : 235,
@@ -596,103 +596,117 @@ def zip_files_with_prefix(source_directory, zip_file_name, prefix=""):
 
 
 if __name__ == "__main__":
-    dir_in = "./"
+    # Check if a directory argument was provided
+    if len(sys.argv) < 2:
+        print("Usage: python clip_clms_FCOVER_SOAM.py <input_directory>")
+        sys.exit(1)
+
+    # sys.argv[0] is the script name itself ('clip_clms_NDVI_AFRI.py')
+    # sys.argv[1] will be the first argument (the input directory)
+    filepathname = sys.argv[1]
+    dir_in = "/home/eouser/clms/FCOVER"
+    dir_out = "/home/eouser/clms/outputs/"
+    # Ensure the directory path ends with a separator if it's not already
+    if not dir_in.endswith(os.sep): dir_in += os.sep
+    if not dir_out.endswith(os.sep): dir_out += os.sep
     desired_width = 26880
     desired_height = 26880
     origin_lat = 20.001488095238095
     origin_lon = -110.001488095238102
     var_name = 'FCOVER'
     version = 'V1.1.1'
-    date_fileslist = glob.glob(dir_in+'c_gls_'+var_name+'300*GLOBE_OLCI_'+version+'.nc')
-    for filepathname in date_fileslist:
-        date_str = filepathname.split("_")[3]
-        directory_name = dir_in+date_str[0:8]
-        os.makedirs(directory_name, exist_ok=True)
-        identifier = 'urn:cgls:south-america:fcover300_v1_333m:'+var_name+'300-RT0_'+date_str+'_SOAM_OLCI_'+version
-        parent_identifier = 'urn:cgls:south-america:fcover300_v1_333m'
-        # 1. Split the filename by "_"
-        dire, filename = os.path.split(filepathname)
-        parts = filename.split("_")
-        # 2. Find the index of the part containing "GLOBE" and replace it
-        for i, part in enumerate(parts):
-            if "GLOBE" in part:
-                parts[i] = part.replace("GLOBE", "SOAM")
-                break # Important: Exit the loop after replacing
-        # 3. Join the parts back together with "_"
-        output_file = os.path.join(directory_name,"_".join(parts))
-        
-        ##### CLIP NETCDF4 ####
-        print('filename:' + str(filepathname) + ' output_file:\n' + output_file)
-        clip_all_vars_netcdf4(filepathname, output_file, origin_lat=origin_lat, origin_lon=origin_lon, clip_width=desired_width, clip_height=desired_height, data_vars = ['FCOVER', 'LENGTH_AFTER', 'LENGTH_BEFORE', 'NOBS', 'QFLAG', 'RMSE'], identifier=identifier, parent_identifier=parent_identifier)
+    # date_fileslist = glob.glob(dir_in+'c_gls_'+var_name+'300*GLOBE_OLCI_'+version+'.nc')
+    # for filepathname in date_fileslist:
+    date_str = os.path.basename(filepathname).split("_")[3]
+    directory_name = dir_out + date_str[0:8]
+    os.makedirs(directory_name, exist_ok=True)
+    identifier = 'urn:cgls:south-america:fcover300_v1_333m:'+var_name+'300-RT0_'+date_str+'_SOAM_OLCI_'+version
+    parent_identifier = 'urn:cgls:south-america:fcover300_v1_333m'
+    # 1. Split the filename by "_"
+    dire, filename = os.path.split(filepathname)
+    parts = filename.split("_")
+    # 2. Find the index of the part containing "GLOBE" and replace it
+    for i, part in enumerate(parts):
+        if "GLOBE" in part:
+            parts[i] = part.replace("GLOBE", "SOAM")
+            break # Important: Exit the loop after replacing
+    # 3. Join the parts back together with "_"
+    output_file = os.path.join(directory_name,"_".join(parts))
 
-        ##### Thumbnail view ####
-        parts = os.path.splitext(output_file)[0].split("_")
-        # Insert "QL" after the date part (202207010000)
-        if len(parts) > 3:  # Make sure there's a date part
-            parts.insert(3, "QL")
-        thumbFilename = "_".join(parts)
-        print('thumbFilename:' + str(thumbFilename))
-        thumbnail_view(output_file, thumbFilename)
-        ## Remove the aux file
-        aux_file = thumbFilename+".tiff.aux.xml"
-        if os.path.exists(aux_file):
-            try:
-                os.remove(aux_file)
-                print(f"File '{aux_file}' removed successfully.")
-            except OSError as e:
-                print(f"Error removing file '{aux_file}': {e}")
-        else:
-            print(f"File '{aux_file}' does not exist.")
-        
-        ##### XML ####
-        destination_xml = os.path.join(directory_name,"c_gls_"+var_name+"300-RT0_PROD-DESC_"+date_str+"_SOAM_OLCI_"+version+".xml")
-        today= datetime.today().strftime("%Y-%m-%d")
-        datetime_object = datetime.strptime(date_str, "%Y%m%d%H%M")
-        formatted_date = datetime_object.strftime("%Y-%m-%d")
-        
-        #time_coverage_start = datetime_object.strftime("%Y-%m-%dT%H:%M:%S") #datetime.strptime(formatted_date, "%Y-%m-%dT%H:%M:%S")
-        time_coverage_end = datetime_object.strftime("%Y-%m-%dT23:59:59")
-        #If the new date is greater than the last day of the month, use the last day of the month
-        if datetime_object.day == 10: #new_date > last_day_of_month:
-            start_date = datetime_object.replace(day=1)
-        elif datetime_object.day == 20:
-            start_date = datetime_object.replace(day=11)
-        else:
-            start_date = datetime_object.replace(day=21)
-        time_coverage_start = start_date.strftime("%Y-%m-%dT00:00:00")
-        ql_filename = thumbFilename.split('/')[-1]+".tiff"
-        params_dict = {
-            "identifier": "urn:cgls:south-america:fcover300_v1_333m:"+var_name+"300-RT0_"+date_str+"_SOAM_OLCI_"+version,
-            "parent_identifier": "urn:cgls:south-america:fcover300_v1_333m",
-            "process_date": today, #"2024-01-26",
-            "rows": 26880,
-            "cols": 26880,
-            "roi_id": "SOAM",
-            "roi_name": "South-America",
-            "ul_lat": 20.0,
-            "ul_lon": -110.0,
-            "lr_lon": -30.0,
-            "lr_lat": -60.0,
-            "platform": "Sentinel-3",
-            "sensor": "OLCI",
-            "previous_product_identifier": "",
-            "alternate_title": var_name+"300-RT0_"+date_str+"_SOAM_OLCI_"+version,
-            "product_date": formatted_date,
-            "time_coverage_start": time_coverage_start,
-            "time_coverage_end": time_coverage_end,
-            "product_version": version,
-            "ql_filename": ql_filename
-        }
-        main_modify_XML(date_str, ql_filename, destination_xml, params_dict, xml_file_path = "CGLS_"+var_name+"300_V1_S3_ProductSet_PDF_SOAM.xml" )
-        
-        ### Zip the folder ### 
-        output_zip_name = os.path.splitext(os.path.basename(output_file))[0]
+    ##### CLIP NETCDF4 ####
+    print('filename:' + str(filepathname) + ' output_file:\n' + output_file)
+    clip_all_vars_netcdf4(filepathname, output_file, origin_lat=origin_lat, origin_lon=origin_lon, clip_width=desired_width, clip_height=desired_height, data_vars = ['FCOVER', 'LENGTH_AFTER', 'LENGTH_BEFORE', 'NOBS', 'QFLAG', 'RMSE'], identifier=identifier, parent_identifier=parent_identifier)
+
+    ##### Thumbnail view ####
+    parts = os.path.splitext(output_file)[0].split("_")
+    # Insert "QL" after the date part (202207010000)
+    if len(parts) > 3:  # Make sure there's a date part
+        parts.insert(3, "QL")
+    thumbFilename = "_".join(parts)
+    print('thumbFilename:' + str(thumbFilename))
+    colorTable = os.path.join(dir_in, "cgl_colorTable_FCOVER.txt")
+    thumbnail_view(output_file, thumbFilename, colorTable)
+    ## Remove the aux file
+    aux_file = thumbFilename+".tiff.aux.xml"
+    if os.path.exists(aux_file):
         try:
-            zip_files_with_prefix(directory_name, output_zip_name+'.zip', date_str[0:8]+'/')
-            # zip_path = shutil.make_archive(output_zip_name, 'zip', root_dir=dir_in, base_dir=directory_name)
-            # print(f"Folder '{directory_name}' successfully zipped to '{zip_path}'")
-        except Exception as e:
-            print(f"Error zipping folder: {e}")
+            os.remove(aux_file)
+            print(f"File '{aux_file}' removed successfully.")
+        except OSError as e:
+            print(f"Error removing file '{aux_file}': {e}")
+    else:
+        print(f"File '{aux_file}' does not exist.")
 
-        ## Clean up dummy folder (optional)
-        shutil.rmtree(directory_name)
+    ##### XML ####
+    destination_xml = os.path.join(directory_name,"c_gls_"+var_name+"300-RT0_PROD-DESC_"+date_str+"_SOAM_OLCI_"+version+".xml")
+    today= datetime.today().strftime("%Y-%m-%d")
+    datetime_object = datetime.strptime(date_str, "%Y%m%d%H%M")
+    formatted_date = datetime_object.strftime("%Y-%m-%d")
+
+    #time_coverage_start = datetime_object.strftime("%Y-%m-%dT%H:%M:%S") #datetime.strptime(formatted_date, "%Y-%m-%dT%H:%M:%S")
+    time_coverage_end = datetime_object.strftime("%Y-%m-%dT23:59:59")
+    #If the new date is greater than the last day of the month, use the last day of the month
+    if datetime_object.day == 10: #new_date > last_day_of_month:
+        start_date = datetime_object.replace(day=1)
+    elif datetime_object.day == 20:
+        start_date = datetime_object.replace(day=11)
+    else:
+        start_date = datetime_object.replace(day=21)
+    time_coverage_start = start_date.strftime("%Y-%m-%dT00:00:00")
+    ql_filename = thumbFilename.split('/')[-1]+".tiff"
+    params_dict = {
+        "identifier": "urn:cgls:south-america:fcover300_v1_333m:"+var_name+"300-RT0_"+date_str+"_SOAM_OLCI_"+version,
+        "parent_identifier": "urn:cgls:south-america:fcover300_v1_333m",
+        "process_date": today, #"2024-01-26",
+        "rows": 26880,
+        "cols": 26880,
+        "roi_id": "SOAM",
+        "roi_name": "South-America",
+        "ul_lat": 20.0,
+        "ul_lon": -110.0,
+        "lr_lon": -30.0,
+        "lr_lat": -60.0,
+        "platform": "Sentinel-3",
+        "sensor": "OLCI",
+        "previous_product_identifier": "",
+        "alternate_title": var_name+"300-RT0_"+date_str+"_SOAM_OLCI_"+version,
+        "product_date": formatted_date,
+        "time_coverage_start": time_coverage_start,
+        "time_coverage_end": time_coverage_end,
+        "product_version": version,
+        "ql_filename": ql_filename
+    }
+    xml_file_path = os.path.join(dir_in, "CGLS_"+var_name+"300_V1_S3_ProductSet_PDF_SOAM.xml" )
+    main_modify_XML(date_str, ql_filename, destination_xml, params_dict, xml_file_path =xml_file_path)
+
+    ### Zip the folder ###
+    output_zip_name = os.path.join(dir_out,os.path.splitext(os.path.basename(output_file))[0])
+    try:
+        zip_files_with_prefix(directory_name, output_zip_name+'.zip', date_str[0:8]+'/')
+        # zip_path = shutil.make_archive(output_zip_name, 'zip', root_dir=dir_in, base_dir=directory_name)
+        # print(f"Folder '{directory_name}' successfully zipped to '{zip_path}'")
+    except Exception as e:
+        print(f"Error zipping folder: {e}")
+
+    ## Clean up dummy folder (optional)
+    shutil.rmtree(directory_name)

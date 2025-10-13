@@ -686,8 +686,10 @@ def clip_all_vars_netcdf4(input_nc_file, output_nc_file, lat_range=None, lon_ran
             print(f"Successfully clipped '{input_nc_file}' and saved to '{output_nc_file}' with compression level {complevel}")
 
     except Exception as e:
-        print(f"An error occurred: {e}")      
-def main_modify_XML(date_str, ql_filename, destination_xml):
+        print(f"An error occurred: {e}")
+
+
+def main_modify_XML(date_str, ql_filename, destination_xml, xml_file_path):
     """
     Main function to execute the XML parameter replacement.
     """
@@ -705,7 +707,7 @@ def main_modify_XML(date_str, ql_filename, destination_xml):
         new_date = last_day_of_month
     time_coverage_end = new_date.strftime("%Y-%m-%dT23:59:59")
     # 1. Define the path to your XML file
-    xml_file_path = "CGLS_NDVI300_V2_S3_ProductSet_PDF_SOAM.xml"
+    # xml_file_path = "CGLS_NDVI300_V2_S3_ProductSet_PDF_SOAM.xml"
     #destination_xml = "c_gls_NDVI300_PROD-DESC_"+date_str+"_AFRI_OLCI_V2.0.1.xml"  # Replace with your desired destination file
     # copy_xml_file(source_xml, destination_xml)
     # ql_filename = ""
@@ -747,30 +749,32 @@ def main_modify_XML(date_str, ql_filename, destination_xml):
             print(modified_xml) # Print the modified XML
         else:
             print("Empty XML file.")
-            
-def thumbnail_view(filename, thumbFilename):
-     # parser = argparse.ArgumentParser(prog='create quicklook based on json config file')
-    # parser.add_argument('--cfgFile', type=str, 
+
+
+def thumbnail_view(filename, thumbFilename, colorTable=''):
+    # parser = argparse.ArgumentParser(prog='create quicklook based on json config file')
+    # parser.add_argument('--cfgFile', type=str,
     #                     help='the input configuration file')
     
 
     qlDict = {
-        "inFilename"    : filename, #"clipped_c_gls_NDVI300_202207010000_AFRI_OLCI_V2.0.1.nc",
-        "outFilename"   : thumbFilename, #"clipped_c_gls_NDVI300_QL_202207010000_AFRI_OLCI_V2.0.1",
-        "colorTable"    : "ColorTable_NDVI300_V2.txt",  #"/data/ingest/clms/NDVI/ColorTable_NDVI300_V2.txt",
-        "ql_Subsample"  : [5,5],
-        "ql_Min"        : 0,
-        "ql_Max"        : 255,
-        "ql_NDV"        : 255,
-        "ql_BandName"   : "NDVI",
-        "ql_QFLAG_BandName": "QFLAG",       # Specify the QFLAG band name
-        "ql_QFLAG_Value": 128,              # The QFLAG value to look for
-        "ql_NDVI_Value_For_QFLAG": 254,     # The NDVI value to set when QFLAG matches
-        "optional"      : ["Following parameters can optionally be used. src_min, srcMax taken into account if of type int"],
-        #"ql_Additional_Format" : "PNG",
-        "src_Min"       : 0,
-        "src_Max"       : 255,
-        "gdal_open_option" : ["HONOUR_VALID_RANGE=FALSE"] #needed for DMP, if not available, defaults to  ["HONOUR_VALID_RANGE=FALSE"]
+        "inFilename": filename,  # "clipped_c_gls_NDVI300_202207010000_AFRI_OLCI_V2.0.1.nc",
+        "outFilename": thumbFilename,  # "clipped_c_gls_NDVI300_QL_202207010000_AFRI_OLCI_V2.0.1",
+        "colorTable": colorTable,  # "/data/ingest/clms/NDVI/ColorTable_NDVI300_V2.txt",
+        "ql_Subsample": [5, 5],
+        "ql_Min": 0,
+        "ql_Max": 255,
+        "ql_NDV": 255,
+        "ql_BandName": "NDVI",
+        "ql_QFLAG_BandName": "QFLAG",  # Specify the QFLAG band name
+        "ql_QFLAG_Value": 128,  # The QFLAG value to look for
+        "ql_NDVI_Value_For_QFLAG": 254,  # The NDVI value to set when QFLAG matches
+        "optional": ["Following parameters can optionally be used. src_min, srcMax taken into account if of type int"],
+        # "ql_Additional_Format" : "PNG",
+        "src_Min": 0,
+        "src_Max": 255,
+        "gdal_open_option": ["HONOUR_VALID_RANGE=FALSE"]
+        # needed for DMP, if not available, defaults to  ["HONOUR_VALID_RANGE=FALSE"]
     }
     # args = parser.parse_args()
 
@@ -820,67 +824,81 @@ def zip_files_with_prefix(source_directory, zip_file_name, prefix=""):
 #     thumbnail_view(output_file, thumbFilename)
 
 if __name__ == "__main__":
-    dir_in = "./"
+    # Check if a directory argument was provided
+    if len(sys.argv) < 2:
+        print("Usage: python clip_clms_NDVI_SOAM.py <input_directory>")
+        sys.exit(1)
+
+    # sys.argv[0] is the script name itself ('clip_clms_NDVI_AFRI.py')
+    # sys.argv[1] will be the first argument (the input directory)
+    filepathname = sys.argv[1]
+    dir_in = "/home/eouser/clms/outputs/NDVI"
+    dir_out = "/home/eouser/clms/outputs/"
+    # Ensure the directory path ends with a separator if it's not already
+    if not dir_in.endswith(os.sep): dir_in += os.sep
+    if not dir_out.endswith(os.sep): dir_out += os.sep
     desired_width = 26880
     desired_height = 26880
     origin_lat = 20.001488095238095
     origin_lon = -110.001488095238102
-    date_fileslist = glob.glob(dir_in+'c_gls_NDVI300*GLOBE_OLCI_V2.0.1.nc')
+    # date_fileslist = glob.glob(dir_in+'c_gls_NDVI300*GLOBE_OLCI_V2.0.1.nc')
     var_name = 'NDVI'
     version = 'V2.0.1'
-    for filepathname in date_fileslist:
-        date_str = filepathname.split("_")[3]
-        directory_name = dir_in+date_str[0:8]
-        os.makedirs(directory_name, exist_ok=True)
-        identifier = 'urn:cgls:continents:ndvi300_v2_333m:' + var_name + '300_' + date_str + '_SOAM_OLCI_' + version
-        parent_identifier = 'urn:cgls:continents:ndvi300_v2_333m'
-        # 1. Split the filename by "_"
-        dire, filename = os.path.split(filepathname)
-        parts = filename.split("_")
-        # 2. Find the index of the part containing "GLOBE" and replace it
-        for i, part in enumerate(parts):
-            if "GLOBE" in part:
-                parts[i] = part.replace("GLOBE", "SOAM")
-                break # Important: Exit the loop after replacing
-        # 3. Join the parts back together with "_"
-        output_file = os.path.join(directory_name,"_".join(parts))
+    # for filepathname in date_fileslist:
+    date_str = os.path.basename(filepathname).split("_")[3]
+    directory_name = dir_out+date_str[0:8]
+    os.makedirs(directory_name, exist_ok=True)
+    identifier = 'urn:cgls:continents:ndvi300_v2_333m:' + var_name + '300_' + date_str + '_SOAM_OLCI_' + version
+    parent_identifier = 'urn:cgls:continents:ndvi300_v2_333m'
+    # 1. Split the filename by "_"
+    dire, filename = os.path.split(filepathname)
+    parts = filename.split("_")
+    # 2. Find the index of the part containing "GLOBE" and replace it
+    for i, part in enumerate(parts):
+        if "GLOBE" in part:
+            parts[i] = part.replace("GLOBE", "SOAM")
+            break # Important: Exit the loop after replacing
+    # 3. Join the parts back together with "_"
+    output_file = os.path.join(directory_name,"_".join(parts))
 
-        ##### CLIP NETCDF4 ####
-        print('filename:' + str(filepathname) + ' output_file:\n' + output_file)
-        clip_all_vars_netcdf4(filepathname, output_file, origin_lat=origin_lat, origin_lon=origin_lon,
-                              clip_width=desired_width, clip_height=desired_height, data_vars = ['NDVI', 'NDVI_unc', 'LENGTH_BEFORE', 'NOBS', 'QFLAG'], identifier=identifier, parent_identifier=parent_identifier)
-        #clip_to_pixel_extent_netcdf4(filename, output_file, extent_str, desired_width, desired_height)
-        ##### Thumbnail view ####
-        parts = os.path.splitext(output_file)[0].split("_")
-        # Insert "QL" after the date part (202207010000)
-        if len(parts) > 3:  # Make sure there's a date part
-            parts.insert(3, "QL")
-        thumbFilename = "_".join(parts)
-        print('thumbFilename:' + str(thumbFilename))
-        thumbnail_view(output_file, thumbFilename)
-        ## Remove the aux file
-        aux_file = thumbFilename+".tiff.aux.xml"
-        if os.path.exists(aux_file):
-            try:
-                os.remove(aux_file)
-                print(f"File '{aux_file}' removed successfully.")
-            except OSError as e:
-                print(f"Error removing file '{aux_file}': {e}")
-        else:
-            print(f"File '{aux_file}' does not exist.")
-        destination_xml = os.path.join(directory_name,"c_gls_NDVI300_PROD-DESC_"+date_str+"_SOAM_OLCI_V2.0.1.xml")
-        ql_filename = thumbFilename.split('/')[-1]+".tiff"
-        ##### XML ####
-        main_modify_XML(date_str, ql_filename, destination_xml)
-
-        #### Zip the folder ###
-        output_zip_name = os.path.splitext(os.path.basename(output_file))[0]
+    ##### CLIP NETCDF4 ####
+    print('filename:' + str(filepathname) + ' output_file:\n' + output_file)
+    clip_all_vars_netcdf4(filepathname, output_file, origin_lat=origin_lat, origin_lon=origin_lon,
+                          clip_width=desired_width, clip_height=desired_height, data_vars = ['NDVI', 'NDVI_unc', 'LENGTH_BEFORE', 'NOBS', 'QFLAG'], identifier=identifier, parent_identifier=parent_identifier)
+    #clip_to_pixel_extent_netcdf4(filename, output_file, extent_str, desired_width, desired_height)
+    ##### Thumbnail view ####
+    parts = os.path.splitext(output_file)[0].split("_")
+    # Insert "QL" after the date part (202207010000)
+    if len(parts) > 3:  # Make sure there's a date part
+        parts.insert(3, "QL")
+    thumbFilename = "_".join(parts)
+    print('thumbFilename:' + str(thumbFilename))
+    colorTable = os.path.join(dir_in, "ColorTable_NDVI300_V2.txt")
+    thumbnail_view(output_file, thumbFilename, colorTable)
+    ## Remove the aux file
+    aux_file = thumbFilename+".tiff.aux.xml"
+    if os.path.exists(aux_file):
         try:
-            zip_files_with_prefix(directory_name, output_zip_name+'.zip', date_str[0:8]+'/')
-            # zip_path = shutil.make_archive(output_zip_name, 'zip', root_dir=dir_in, base_dir=directory_name)
-            # print(f"Folder '{directory_name}' successfully zipped to '{zip_path}'")
-        except Exception as e:
-            print(f"Error zipping folder: {e}")
+            os.remove(aux_file)
+            print(f"File '{aux_file}' removed successfully.")
+        except OSError as e:
+            print(f"Error removing file '{aux_file}': {e}")
+    else:
+        print(f"File '{aux_file}' does not exist.")
+    destination_xml = os.path.join(directory_name,"c_gls_NDVI300_PROD-DESC_"+date_str+"_SOAM_OLCI_V2.0.1.xml")
+    ql_filename = thumbFilename.split('/')[-1]+".tiff"
+    ##### XML ####
+    xml_file_path = "CGLS_NDVI300_V2_S3_ProductSet_PDF_SOAM.xml"
+    main_modify_XML(date_str, ql_filename, destination_xml, xml_file_path)
 
-        # Clean up dummy folder (optional)
-        shutil.rmtree(directory_name)
+    #### Zip the folder ###
+    output_zip_name = os.path.join(dir_out,os.path.splitext(os.path.basename(output_file))[0])
+    try:
+        zip_files_with_prefix(directory_name, output_zip_name+'.zip', date_str[0:8]+'/')
+        # zip_path = shutil.make_archive(output_zip_name, 'zip', root_dir=dir_in, base_dir=directory_name)
+        # print(f"Folder '{directory_name}' successfully zipped to '{zip_path}'")
+    except Exception as e:
+        print(f"Error zipping folder: {e}")
+
+    # Clean up dummy folder (optional)
+    shutil.rmtree(directory_name)

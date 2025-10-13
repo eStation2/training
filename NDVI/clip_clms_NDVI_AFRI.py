@@ -9,15 +9,19 @@ import os, sys
 import numpy as np
 from osgeo import gdal
 import glob
+
+
 def createColorTable(colorTable):
     with open(colorTable, 'r') as hColorTable:
         ctLines = hColorTable.readlines()
-        
+
     ct = gdal.ColorTable()
     for lineId, line in enumerate(ctLines):
-        line_ = line.replace('   ',' ').replace('  ',' ').replace('\t',' ').strip().strip('<').strip('>').strip('Entry ').strip('/').split(' ')
-        ct.SetColorEntry(lineId,(int(line_[0].split('=')[1].strip('"')), int(line_[1].split('=')[1].strip('"')), int(line_[2].split('=')[1].strip('"')), int(line_[3].split('=')[1].strip('"'))))
-        
+        line_ = line.replace('   ', ' ').replace('  ', ' ').replace('\t', ' ').strip().strip('<').strip('>').strip(
+            'Entry ').strip('/').split(' ')
+        ct.SetColorEntry(lineId, (int(line_[0].split('=')[1].strip('"')), int(line_[1].split('=')[1].strip('"')),
+                                  int(line_[2].split('=')[1].strip('"')), int(line_[3].split('=')[1].strip('"'))))
+
     return ct
 
 
@@ -127,7 +131,7 @@ def createQuicklook_new(qlDict):
                 [src_Min, src_Max] = validRange
 
             # Read original NDVI data as float64 for precise manipulation
-            original_ndvi_data_array = ndvi_band.ReadAsArray() #.astype(np.float64)
+            original_ndvi_data_array = ndvi_band.ReadAsArray()  # .astype(np.float64)
 
             # Get geotransform, projection, and dimensions from the primary band
             geotransform = src_ds_ndvi_band.GetGeoTransform()
@@ -211,12 +215,12 @@ def createQuicklook_new(qlDict):
         mem_ds.GetRasterBand(1).WriteArray(processed_ndvi_data_array)
         mem_ds.GetRasterBand(1).SetNoDataValue(qlDict['ql_NDV'])  # Set NoDataValue for the output band
 
-        #create output
-        ql_Type         = gdal.GDT_Byte
-        #GIOG-1358: PROFILE=GeoTIFF removes scale and offset TAGS from GeoTIFF's
+        # create output
+        ql_Type = gdal.GDT_Byte
+        # GIOG-1358: PROFILE=GeoTIFF removes scale and offset TAGS from GeoTIFF's
         creationOptions = ['COMPRESS=LZW', 'PROFILE=GeoTIFF']
-        openOptions     = ['HONOUR_VALID_RANGE=FALSE']
-        #GIOG-1601: DMP quicklook needs flag values to be set to no_data
+        openOptions = ['HONOUR_VALID_RANGE=FALSE']
+        # GIOG-1601: DMP quicklook needs flag values to be set to no_data
         if 'gdal_open_option' in qlDict:
             openOptions = qlDict['gdal_open_option']
 
@@ -231,8 +235,8 @@ def createQuicklook_new(qlDict):
 
         translateOptions_tif = gdal.TranslateOptions(
             format='GTIFF',
-            widthPct=qlDict['ql_Subsample'][0],#subsample_width_pct,
-            heightPct=qlDict['ql_Subsample'][1],#subsample_height_pct,
+            widthPct=qlDict['ql_Subsample'][0],  # subsample_width_pct,
+            heightPct=qlDict['ql_Subsample'][1],  # subsample_height_pct,
             creationOptions=creationOptions
             # outputType, scaleParams, noData are not needed here as they were handled in NumPy
         )
@@ -248,7 +252,6 @@ def createQuicklook_new(qlDict):
         # src_ds_sd = None
         gdal.Translate(qlTifFilename, mem_ds, options=translateOptions_tif)
         mem_ds = None  # Close the in-memory dataset to free resources
-
 
         # remove metadata
         # ERROR 6: The PNG driver does not support update access to existing datasets.
@@ -294,17 +297,17 @@ def createQuicklook_new(qlDict):
 def createQuicklook(qlDict):
     '''
     createQuicklook
-    
+
         creates quicklook from input netCDF using gdal API
-        
+
         the outFilename is always, appended with .tiff' to generate a quicklook.tiff
         optionally, a png file can be created
         e.g. cgl_DMP-RT0_QL_201808100000_X18Y03_S3_V1.1.rc1.png
-        
+
         the output type of a quicklook is ALWAYS byte
-        
+
         src_Type, src_min, src_max are by default derived from the input dataset
-    
+
     Params:
     ------
     qlDict: dict
@@ -323,8 +326,8 @@ def createQuicklook(qlDict):
             ql_NDV: int 0...255
                 the no_data_value to be used for the ql image
             ql_Min, ql_Max: int 0..255
-                the valid_range (minimum, maximum) data value for the ql image 
-                
+                the valid_range (minimum, maximum) data value for the ql image
+
         optional:
             ql_Additional_Format: str
                 # QL.tif will be generated anyhow
@@ -333,22 +336,22 @@ def createQuicklook(qlDict):
             src_Min, src_Max: int
                 defining the valid_range of the input_band, default taken from 'valid_range' attribute
                 used to overrule input netCDF settings
-    
+
     Returns:
     -------
     err, errMsg: err=0 if OK
     '''
-    
+
     try:
         # verify input parameter values
-        if (not qlDict['ql_NDV'] in range(0,256)) or \
-           (not qlDict['ql_Min'] in range(0,256)) or \
-           (not qlDict['ql_Max'] in range(0,256)):
+        if (not qlDict['ql_NDV'] in range(0, 256)) or \
+                (not qlDict['ql_Min'] in range(0, 256)) or \
+                (not qlDict['ql_Max'] in range(0, 256)):
             return 1, 'Error createQuicklook, ql_ parameters not within the expected output gdal.GDT_Byte range '
 
         if not type(qlDict['ql_Subsample']) == list:
             return 1, 'Error createQuicklook, ql_Subsample should be of type list'
-            
+
         if not os.path.exists(qlDict['inFilename']):
             return 1, 'Error createQuicklook, {} not existing'.format(qlDict['inFilename'])
 
@@ -360,42 +363,43 @@ def createQuicklook(qlDict):
 
         try:
             subdataset = 'NETCDF:"' + qlDict['inFilename'] + '":' + qlDict['ql_BandName']
-            
+
             src_ds_sd = gdal.Open(subdataset, gdal.GA_ReadOnly)
-            
-            src_NDV  = src_ds_sd.GetRasterBand(1).GetNoDataValue()
+
+            src_NDV = src_ds_sd.GetRasterBand(1).GetNoDataValue()
             src_Type = src_ds_sd.GetRasterBand(1).DataType
-    
+
             src_bandMeta = src_ds_sd.GetRasterBand(1).GetMetadata()
             if 'valid_range' in src_bandMeta:
                 validRange = src_bandMeta['valid_range'].strip('{').strip('}').split(',')
-                validRange = list(map(np.int16, validRange))   #type only needed to compare with ql_Min/ql_Max, not for metedata-type
+                validRange = list(
+                    map(np.int16, validRange))  # type only needed to compare with ql_Min/ql_Max, not for metedata-type
                 [src_Min, src_Max] = validRange
             else:
                 src_Min = None
                 src_Max = None
-                
-            #close the subdataset and the whole dataset
+
+            # close the subdataset and the whole dataset
             src_ds_sd = None
-            src_ds    = None
+            src_ds = None
         except:
             return 1, 'Error createQuicklook. Error reading bands from {}'.format(qlDict['inFilename'])
-            
-        #create output
-        ql_Type         = gdal.GDT_Byte
-        #GIOG-1358: PROFILE=GeoTIFF removes scale and offset TAGS from GeoTIFF's
-        creationOptions = ['COMPRESS=LZW', 'PROFILE=GeoTIFF'] 
-        openOptions     = ['HONOUR_VALID_RANGE=FALSE']
-        #GIOG-1601: DMP quicklook needs flag values to be set to no_data
+
+        # create output
+        ql_Type = gdal.GDT_Byte
+        # GIOG-1358: PROFILE=GeoTIFF removes scale and offset TAGS from GeoTIFF's
+        creationOptions = ['COMPRESS=LZW', 'PROFILE=GeoTIFF']
+        openOptions = ['HONOUR_VALID_RANGE=FALSE']
+        # GIOG-1601: DMP quicklook needs flag values to be set to no_data
         if 'gdal_open_option' in qlDict:
             openOptions = qlDict['gdal_open_option']
-        
+
         # outputDir, _ = os.path.split(qlDict['outFilename'])
         # os.makedirs(outputDir, exist_ok=True)
-        
-        qlTifFilename  = qlDict['outFilename']+'.tiff'
-        qlPngFilename  = qlDict['outFilename']+'.png'
-    
+
+        qlTifFilename = qlDict['outFilename'] + '.tiff'
+        qlPngFilename = qlDict['outFilename'] + '.png'
+
         if 'src_Min' in qlDict and type(qlDict['src_Min']) == int:
             print('createQuicklook: overruling input src_Min {} by cfg {}'.format(src_Min, qlDict['src_Min']))
             src_Min = qlDict['src_Min']
@@ -405,47 +409,50 @@ def createQuicklook(qlDict):
 
         scaleParams = None
         if not (src_Min == qlDict['ql_Min']) or not (src_Max == qlDict['ql_Max']):
-        #if not (src_Type == ql_Type):
+            # if not (src_Type == ql_Type):
             if src_Min == None and src_Max == None:
                 return 1, 'Error createQuicklook. impossible to convert inputband_Type to Byte without valid_range. Provide "src_Min" and "src_Max in qlDict'
-            scaleParams = [[src_Min,src_Max,qlDict['ql_Min'],qlDict['ql_Max']]] #list of band-list to be provided
-    
-        #translate subdataset to GTIFF and scale immediate to QL output format
-        translateOptions = gdal.TranslateOptions(format='GTIFF', outputType=ql_Type, bandList=[1], 
-                                                 widthPct=qlDict['ql_Subsample'][0], heightPct=qlDict['ql_Subsample'][0], 
-                                                 creationOptions=creationOptions, scaleParams=scaleParams, noData=qlDict['ql_NDV'])
-        #GIOG-1358: Do not interprete the NetCDF Valid range, otherwise all flags will be no_data
+            scaleParams = [[src_Min, src_Max, qlDict['ql_Min'], qlDict['ql_Max']]]  # list of band-list to be provided
+
+        # translate subdataset to GTIFF and scale immediate to QL output format
+        translateOptions = gdal.TranslateOptions(format='GTIFF', outputType=ql_Type, bandList=[1],
+                                                 widthPct=qlDict['ql_Subsample'][0],
+                                                 heightPct=qlDict['ql_Subsample'][0],
+                                                 creationOptions=creationOptions, scaleParams=scaleParams,
+                                                 noData=qlDict['ql_NDV'])
+        # GIOG-1358: Do not interprete the NetCDF Valid range, otherwise all flags will be no_data
         src_ds_sd = gdal.OpenEx(subdataset, gdal.GA_ReadOnly, open_options=openOptions)
         gdal.Translate(qlTifFilename, src_ds_sd, options=translateOptions)
         src_ds_sd = None
-        
+
         # remove metadata
         # ERROR 6: The PNG driver does not support update access to existing datasets.
         dst_ds = gdal.Open(qlTifFilename, gdal.GA_Update)
         dst_ds.SetMetadata({})
         dst_ds.GetRasterBand(1).SetMetadata({})
-        
+
         # add colorTable
         if os.path.exists(qlDict['colorTable']):
             ct = createColorTable(qlDict['colorTable'])
             dst_ds.GetRasterBand(1).SetColorTable(ct)
         dst_ds.FlushCache()
         dst_ds = None
-        
+
         if 'ql_Additional_Format' in qlDict:
             if not qlDict['ql_Additional_Format'] == 'PNG':
                 return 1, 'Error createQuicklook. ql_Additional_Format only supports PNG '
-                
-            #translate to final PNG
+
+            # translate to final PNG
             translateOptions = gdal.TranslateOptions(format='PNG', bandList=[1])
             gdal.Translate(qlPngFilename, qlTifFilename, options=translateOptions)
-        
+
         return True
-            
+
     except:
         errMess = str(sys.exc_info()[1])
         errLine = sys.exc_info()[2].tb_lineno
         print('Error createQuicklook at {} \n{}'.format(errLine, errMess))
+
 
 def replace_xml_parameters(xml_file_path, params_dict, output_file_path=None):
     """
@@ -519,10 +526,9 @@ def replace_xml_parameters(xml_file_path, params_dict, output_file_path=None):
         return ET.tostring(root, encoding="utf-8").decode()
 
 
-
 def clip_all_vars_netcdf4(input_nc_file, output_nc_file, lat_range=None, lon_range=None,
-                           origin_lat=None, origin_lon=None, clip_width=None, clip_height=None,
-                           compress=True, complevel=9, data_vars = None, identifier=None, parent_identifier=None):
+                          origin_lat=None, origin_lon=None, clip_width=None, clip_height=None,
+                          compress=True, complevel=9, data_vars=None, identifier=None, parent_identifier=None):
     """
     Clips all variables in a NetCDF file based on either latitude/longitude ranges
     OR by providing an origin (top-left) coordinate and desired width/height in pixels.
@@ -541,7 +547,8 @@ def clip_all_vars_netcdf4(input_nc_file, output_nc_file, lat_range=None, lon_ran
             dst.identifier = identifier
             dst.parent_identifier = parent_identifier
             dst.title = src.title.replace("GLOBE", "AFRI")
-            dst.history = src.history+ " \n"+datetime.today().strftime("%Y-%m-%d")+': CLMS Clipping tool for Africa' #+src.history.split(':')[-1]
+            dst.history = src.history + " \n" + datetime.today().strftime(
+                "%Y-%m-%d") + ': CLMS Clipping tool for Africa'  # +src.history.split(':')[-1]
             # Get latitude and longitude variables and values
             lat_var = src.variables['lat']
             lon_var = src.variables['lon']
@@ -565,15 +572,15 @@ def clip_all_vars_netcdf4(input_nc_file, output_nc_file, lat_range=None, lon_ran
 
                 # --- MODIFICATION START ---
                 # Remove one pixel from the left (increase lon_start_idx by 1)
-                lon_start_idx = min(lon_start_idx + 1, len(lon_values) - 1) # Ensure it doesn't go out of bounds
+                lon_start_idx = min(lon_start_idx + 1, len(lon_values) - 1)  # Ensure it doesn't go out of bounds
 
                 # Add one pixel to the right (increase clip_width by 1)
-                adjusted_clip_width = clip_width #+ 1
+                adjusted_clip_width = clip_width  # + 1
                 # --- MODIFICATION END ---
 
                 # Calculate the end indices based on origin and desired width/height
                 lat_end_idx = lat_start_idx + clip_height
-                lon_end_idx = lon_start_idx + adjusted_clip_width # Use adjusted_clip_width here
+                lon_end_idx = lon_start_idx + adjusted_clip_width  # Use adjusted_clip_width here
 
                 # Ensure indices are within bounds of the original data
                 lat_end_idx = min(lat_end_idx, len(lat_values))
@@ -583,9 +590,8 @@ def clip_all_vars_netcdf4(input_nc_file, output_nc_file, lat_range=None, lon_ran
                 # This ensures we get exactly `clip_height` or `adjusted_clip_width` pixels
                 if (lat_end_idx - lat_start_idx) < clip_height:
                     lat_start_idx = max(0, lat_end_idx - clip_height)
-                if (lon_end_idx - lon_start_idx) < adjusted_clip_width: # Use adjusted_clip_width here
+                if (lon_end_idx - lon_start_idx) < adjusted_clip_width:  # Use adjusted_clip_width here
                     lon_start_idx = max(0, lon_end_idx - adjusted_clip_width)
-
 
                 lat_indices = slice(lat_start_idx, lat_end_idx)
                 lon_indices = slice(lon_start_idx, lon_end_idx)
@@ -593,7 +599,7 @@ def clip_all_vars_netcdf4(input_nc_file, output_nc_file, lat_range=None, lon_ran
                 output_height = len(lat_values[lat_indices])
                 output_width = len(lon_values[lon_indices])
 
-                if output_height != clip_height or output_width != adjusted_clip_width: # Compare with adjusted_clip_width
+                if output_height != clip_height or output_width != adjusted_clip_width:  # Compare with adjusted_clip_width
                     print(f"Warning: Clipped dimensions ({output_width}x{output_height}) do not exactly match "
                           f"requested dimensions ({adjusted_clip_width}x{clip_height}). This can happen if the origin "
                           f"is too close to the edge of the input data.")
@@ -634,15 +640,17 @@ def clip_all_vars_netcdf4(input_nc_file, output_nc_file, lat_range=None, lon_ran
             out_lon_var.setncatts(lon_var.__dict__)
 
             # Copy the time dimension and variable with compression
-            if 'time' in src.dimensions: # Check if 'time' dimension exists
+            if 'time' in src.dimensions:  # Check if 'time' dimension exists
                 dst.createDimension('time', len(src.dimensions['time']))
-                out_time_var = dst.createVariable('time', src.variables['time'].dtype, ('time',), zlib=compress, complevel=complevel)
+                out_time_var = dst.createVariable('time', src.variables['time'].dtype, ('time',), zlib=compress,
+                                                  complevel=complevel)
                 out_time_var[:] = src.variables['time'][:]
                 out_time_var.setncatts(src.variables['time'].__dict__)
 
             # Copy the crs variable with compression
-            if 'crs' in src.variables: # Check if 'crs' variable exists
-                out_crs_var = dst.createVariable('crs', src.variables['crs'].dtype, src.variables['crs'].dimensions, zlib=compress, complevel=complevel)
+            if 'crs' in src.variables:  # Check if 'crs' variable exists
+                out_crs_var = dst.createVariable('crs', src.variables['crs'].dtype, src.variables['crs'].dimensions,
+                                                 zlib=compress, complevel=complevel)
                 out_crs_var[:] = src.variables['crs'][:]
                 out_crs_var.setncatts(src.variables['crs'].__dict__)
 
@@ -662,8 +670,9 @@ def clip_all_vars_netcdf4(input_nc_file, output_nc_file, lat_range=None, lon_ran
                         var_dims.append('lon')
 
                     if var_name == "NDVI_unc": new_chunks = (1, 1344, 1512)
-                    if var_dims: # Only proceed if it's a spatial/temporal variable
-                        out_var = dst.createVariable(var_name, var.dtype, tuple(var_dims), zlib=compress, complevel=complevel, chunksizes=new_chunks)
+                    if var_dims:  # Only proceed if it's a spatial/temporal variable
+                        out_var = dst.createVariable(var_name, var.dtype, tuple(var_dims), zlib=compress,
+                                                     complevel=complevel, chunksizes=new_chunks)
                         out_var.setncatts(var.__dict__)
                         # for attr_name in var.ncattrs():
                         #     if attr_name not in ['valid_min', 'valid_max','valid_range']:
@@ -673,48 +682,54 @@ def clip_all_vars_netcdf4(input_nc_file, output_nc_file, lat_range=None, lon_ran
                             out_var[:] = var[:, lat_indices, lon_indices]
                         elif 'lat' in var.dimensions and 'lon' in var.dimensions:
                             out_var[:] = var[lat_indices, lon_indices]
-                        else: # Handle other possible dimension orders if needed, or skip
-                            print(f"Warning: Variable '{var_name}' has an unexpected combination of dimensions. Skipping clipping for this variable.")
+                        else:  # Handle other possible dimension orders if needed, or skip
+                            print(
+                                f"Warning: Variable '{var_name}' has an unexpected combination of dimensions. Skipping clipping for this variable.")
                             # For simplicity, if it's not a (time, lat, lon) or (lat, lon) variable, copy it fully or skip
-                            out_var[:] = var[:] # Copy full variable if dims not matched for clipping
+                            out_var[:] = var[:]  # Copy full variable if dims not matched for clipping
                     else:
                         # If it's a scalar or 1D variable not related to time/lat/lon
-                        out_var = dst.createVariable(var_name, var.dtype, var.dimensions, zlib=compress, complevel=complevel, chunksizes=new_chunks)
+                        out_var = dst.createVariable(var_name, var.dtype, var.dimensions, zlib=compress,
+                                                     complevel=complevel, chunksizes=new_chunks)
                         out_var.setncatts(var.__dict__)
                         out_var[:] = var[:]
 
-            print(f"Successfully clipped '{input_nc_file}' and saved to '{output_nc_file}' with compression level {complevel}")
+            print(
+                f"Successfully clipped '{input_nc_file}' and saved to '{output_nc_file}' with compression level {complevel}")
 
     except Exception as e:
-        print(f"An error occurred: {e}")      
-def main_modify_XML(date_str, ql_filename, destination_xml):
+        print(f"An error occurred: {e}")
+
+
+def main_modify_XML(date_str, ql_filename, destination_xml, xml_file_path):
     """
     Main function to execute the XML parameter replacement.
     """
     # date_str = "202207010000"
     datetime_object = datetime.strptime(date_str, "%Y%m%d%H%M")
     formatted_date = datetime_object.strftime("%Y-%m-%d")
-    today= datetime.today().strftime("%Y-%m-%d")
-    time_coverage_start = datetime_object.strftime("%Y-%m-%dT%H:%M:%S") #datetime.strptime(formatted_date, "%Y-%m-%dT%H:%M:%S")
+    today = datetime.today().strftime("%Y-%m-%d")
+    time_coverage_start = datetime_object.strftime(
+        "%Y-%m-%dT%H:%M:%S")  # datetime.strptime(formatted_date, "%Y-%m-%dT%H:%M:%S")
     # Add 10 days
     new_date = datetime_object + relativedelta(days=+9)
     # Get the last day of the month
     last_day_of_month = datetime_object.replace(day=monthrange(datetime_object.year, datetime_object.month)[1])
-    #If the new date is greater than the last day of the month, use the last day of the month
-    if datetime_object.day == 21: #new_date > last_day_of_month:
+    # If the new date is greater than the last day of the month, use the last day of the month
+    if datetime_object.day == 21:  # new_date > last_day_of_month:
         new_date = last_day_of_month
     time_coverage_end = new_date.strftime("%Y-%m-%dT23:59:59")
     # 1. Define the path to your XML file
-    xml_file_path = "CGLS_NDVI300_V2_S3_ProductSet_PDF.xml"  
-    #destination_xml = "c_gls_NDVI300_PROD-DESC_"+date_str+"_AFRI_OLCI_V2.0.1.xml"  # Replace with your desired destination file
+    # xml_file_path = "CGLS_NDVI300_V2_S3_ProductSet_PDF.xml"
+    # destination_xml = "c_gls_NDVI300_PROD-DESC_"+date_str+"_AFRI_OLCI_V2.0.1.xml"  # Replace with your desired destination file
     # copy_xml_file(source_xml, destination_xml)
     # ql_filename = ""
     # 2.  Define the dictionary of parameters and their values.
     #     Important:  The keys should match the parameter names *without* the '$' prefix.
     params_dict = {
-        "identifier": "urn:cgls:continents:ndvi300_v2_333m:NDVI300_"+date_str+"_AFRI_OLCI_V2.0.1",
+        "identifier": "urn:cgls:continents:ndvi300_v2_333m:NDVI300_" + date_str + "_AFRI_OLCI_V2.0.1",
         "parent_identifier": "urn:cgls:continents:ndvi300_v2_333m",
-        "process_date": today, #"2024-01-26",
+        "process_date": today,  # "2024-01-26",
         "rows": 26880,
         "cols": 30240,
         "roi_id": "AFRI",
@@ -726,7 +741,7 @@ def main_modify_XML(date_str, ql_filename, destination_xml):
         "platform": "Sentinel-3",
         "sensor": "OLCI",
         "previous_product_identifier": "",
-        "alternate_title": "NDVI300_"+date_str+"_AFRI_OLCI_V2.0.1",
+        "alternate_title": "NDVI300_" + date_str + "_AFRI_OLCI_V2.0.1",
         "product_date": formatted_date,
         "time_coverage_start": time_coverage_start,
         "time_coverage_end": time_coverage_end,
@@ -744,33 +759,34 @@ def main_modify_XML(date_str, ql_filename, destination_xml):
 
     if modified_xml is not None:
         if modified_xml:
-            print(modified_xml) # Print the modified XML
+            print(modified_xml)  # Print the modified XML
         else:
             print("Empty XML file.")
-            
-def thumbnail_view(filename, thumbFilename):
-     # parser = argparse.ArgumentParser(prog='create quicklook based on json config file')
-    # parser.add_argument('--cfgFile', type=str, 
+
+
+def thumbnail_view(filename, thumbFilename, colorTable=''):
+    # parser = argparse.ArgumentParser(prog='create quicklook based on json config file')
+    # parser.add_argument('--cfgFile', type=str,
     #                     help='the input configuration file')
-    
 
     qlDict = {
-        "inFilename"    : filename, #"clipped_c_gls_NDVI300_202207010000_AFRI_OLCI_V2.0.1.nc",
-        "outFilename"   : thumbFilename, #"clipped_c_gls_NDVI300_QL_202207010000_AFRI_OLCI_V2.0.1",
-        "colorTable"    : "ColorTable_NDVI300_V2.txt",  #"/data/ingest/clms/NDVI/ColorTable_NDVI300_V2.txt",
-        "ql_Subsample"  : [5,5],
-        "ql_Min"        : 0,
-        "ql_Max"        : 255,
-        "ql_NDV"        : 255,
-        "ql_BandName"   : "NDVI",
-        "ql_QFLAG_BandName": "QFLAG",       # Specify the QFLAG band name
-        "ql_QFLAG_Value": 128,              # The QFLAG value to look for
-        "ql_NDVI_Value_For_QFLAG": 254,     # The NDVI value to set when QFLAG matches
-        "optional"      : ["Following parameters can optionally be used. src_min, srcMax taken into account if of type int"],
-        #"ql_Additional_Format" : "PNG",
-        "src_Min"       : 0,
-        "src_Max"       : 255,
-        "gdal_open_option" : ["HONOUR_VALID_RANGE=FALSE"] #needed for DMP, if not available, defaults to  ["HONOUR_VALID_RANGE=FALSE"]
+        "inFilename": filename,  # "clipped_c_gls_NDVI300_202207010000_AFRI_OLCI_V2.0.1.nc",
+        "outFilename": thumbFilename,  # "clipped_c_gls_NDVI300_QL_202207010000_AFRI_OLCI_V2.0.1",
+        "colorTable": colorTable,  # "/data/ingest/clms/NDVI/ColorTable_NDVI300_V2.txt",
+        "ql_Subsample": [5, 5],
+        "ql_Min": 0,
+        "ql_Max": 255,
+        "ql_NDV": 255,
+        "ql_BandName": "NDVI",
+        "ql_QFLAG_BandName": "QFLAG",  # Specify the QFLAG band name
+        "ql_QFLAG_Value": 128,  # The QFLAG value to look for
+        "ql_NDVI_Value_For_QFLAG": 254,  # The NDVI value to set when QFLAG matches
+        "optional": ["Following parameters can optionally be used. src_min, srcMax taken into account if of type int"],
+        # "ql_Additional_Format" : "PNG",
+        "src_Min": 0,
+        "src_Max": 255,
+        "gdal_open_option": ["HONOUR_VALID_RANGE=FALSE"]
+        # needed for DMP, if not available, defaults to  ["HONOUR_VALID_RANGE=FALSE"]
     }
     # args = parser.parse_args()
 
@@ -783,12 +799,13 @@ def thumbnail_view(filename, thumbFilename):
         # if err:
         #     print(errMsg)
         #     raise Exception(errMsg)
-        
+
     except:
         errMess = str(sys.exc_info()[1])
         errLine = sys.exc_info()[2].tb_lineno
-        print(1,'[quicklook:' + str(errLine) + '] failed:\n' + errMess)
+        print(1, '[quicklook:' + str(errLine) + '] failed:\n' + errMess)
         sys.exit(1)
+
 
 def zip_files_with_prefix(source_directory, zip_file_name, prefix=""):
     """
@@ -820,67 +837,84 @@ def zip_files_with_prefix(source_directory, zip_file_name, prefix=""):
 #     thumbnail_view(output_file, thumbFilename)
 
 if __name__ == "__main__":
-    dir_in = "./"
+    # Check if a directory argument was provided
+    if len(sys.argv) < 2:
+        print("Usage: python clip_clms_NDVI_AFRI.py <input_directory>")
+        sys.exit(1)
+
+    # sys.argv[0] is the script name itself ('clip_clms_NDVI_AFRI.py')
+    # sys.argv[1] will be the first argument (the input directory)
+    filepathname = sys.argv[1]
+    dir_in = "/home/eouser/clms/NDVI"
+    dir_out = "/home/eouser/clms/outputs/"
+    # Ensure the directory path ends with a separator if it's not already
+    if not dir_in.endswith(os.sep): dir_in += os.sep
+    if not dir_out.endswith(os.sep): dir_out += os.sep
     desired_width = 30240
     desired_height = 26880
     origin_lat = 40.0014880952380949
     origin_lon = -30.0014880952380949
-    date_fileslist = glob.glob(dir_in+'c_gls_NDVI300*GLOBE_OLCI_V2.0.1.nc')
+    # date_fileslist = glob.glob(dir_in+'c_gls_NDVI300*GLOBE_OLCI_V2.0.1.nc')
     var_name = 'NDVI'
     version = 'V2.0.1'
-    for filepathname in date_fileslist:
-        date_str = filepathname.split("_")[3]
-        directory_name = dir_in+date_str[0:8]
-        os.makedirs(directory_name, exist_ok=True)
-        identifier = 'urn:cgls:continents:ndvi300_v2_333m:' + var_name + '300_' + date_str + '_AFRI_OLCI_' + version
-        parent_identifier = 'urn:cgls:continents:ndvi300_v2_333m'
-        # 1. Split the filename by "_"
-        dire, filename = os.path.split(filepathname)
-        parts = filename.split("_")
-        # 2. Find the index of the part containing "GLOBE" and replace it
-        for i, part in enumerate(parts):
-            if "GLOBE" in part:
-                parts[i] = part.replace("GLOBE", "AFRI")
-                break # Important: Exit the loop after replacing
-        # 3. Join the parts back together with "_"
-        output_file = os.path.join(directory_name,"_".join(parts))
+    # for filepathname in date_fileslist:
+    date_str = os.path.basename(filepathname).split("_")[3]
+    directory_name = dir_out + date_str[0:8]
+    os.makedirs(directory_name, exist_ok=True)
+    identifier = 'urn:cgls:continents:ndvi300_v2_333m:' + var_name + '300_' + date_str + '_AFRI_OLCI_' + version
+    parent_identifier = 'urn:cgls:continents:ndvi300_v2_333m'
+    # 1. Split the filename by "_"
+    dire, filename = os.path.split(filepathname)
+    parts = filename.split("_")
+    # 2. Find the index of the part containing "GLOBE" and replace it
+    for i, part in enumerate(parts):
+        if "GLOBE" in part:
+            parts[i] = part.replace("GLOBE", "AFRI")
+            break  # Important: Exit the loop after replacing
+    # 3. Join the parts back together with "_"
+    output_file = os.path.join(directory_name, "_".join(parts))
 
-        ##### CLIP NETCDF4 ####
-        print('filename:' + str(filepathname) + ' output_file:\n' + output_file)
-        clip_all_vars_netcdf4(filepathname, output_file, origin_lat=origin_lat, origin_lon=origin_lon,
-                              clip_width=desired_width, clip_height=desired_height, data_vars = ['NDVI', 'NDVI_unc', 'LENGTH_BEFORE', 'NOBS', 'QFLAG'], identifier=identifier, parent_identifier=parent_identifier)
-        #clip_to_pixel_extent_netcdf4(filename, output_file, extent_str, desired_width, desired_height)
-        ##### Thumbnail view ####
-        parts = os.path.splitext(output_file)[0].split("_")
-        # Insert "QL" after the date part (202207010000)
-        if len(parts) > 3:  # Make sure there's a date part
-            parts.insert(3, "QL")
-        thumbFilename = "_".join(parts)
-        print('thumbFilename:' + str(thumbFilename))
-        thumbnail_view(output_file, thumbFilename)
-        ## Remove the aux file
-        aux_file = thumbFilename+".tiff.aux.xml"
-        if os.path.exists(aux_file):
-            try:
-                os.remove(aux_file)
-                print(f"File '{aux_file}' removed successfully.")
-            except OSError as e:
-                print(f"Error removing file '{aux_file}': {e}")
-        else:
-            print(f"File '{aux_file}' does not exist.")
-        destination_xml = os.path.join(directory_name,"c_gls_NDVI300_PROD-DESC_"+date_str+"_AFRI_OLCI_V2.0.1.xml")
-        ql_filename = thumbFilename.split('/')[-1]+".tiff"
-        ##### XML ####
-        main_modify_XML(date_str, ql_filename, destination_xml)
-
-        #### Zip the folder ###
-        output_zip_name = os.path.splitext(os.path.basename(output_file))[0]
+    ##### CLIP NETCDF4 ####
+    print('filename:' + str(filepathname) + ' output_file:\n' + output_file)
+    clip_all_vars_netcdf4(filepathname, output_file, origin_lat=origin_lat, origin_lon=origin_lon,
+                          clip_width=desired_width, clip_height=desired_height, data_vars = ['NDVI', 'NDVI_unc', 'LENGTH_BEFORE', 'NOBS', 'QFLAG'], identifier=identifier, parent_identifier=parent_identifier)
+    # clip_to_pixel_extent_netcdf4(filename, output_file, extent_str, desired_width, desired_height)
+    ##### Thumbnail view ####
+    parts = os.path.splitext(output_file)[0].split("_")
+    # Insert "QL" after the date part (202207010000)
+    if len(parts) > 3:  # Make sure there's a date part
+        parts.insert(3, "QL")
+    thumbFilename = "_".join(parts)
+    print('thumbFilename:' + str(thumbFilename))
+    colorTable = os.path.join(dir_in, "ColorTable_NDVI300_V2.txt")
+    thumbnail_view(output_file, thumbFilename, colorTable)
+    ## Remove the aux file
+    aux_file = thumbFilename + ".tiff.aux.xml"
+    if os.path.exists(aux_file):
         try:
-            zip_files_with_prefix(directory_name, output_zip_name+'.zip', date_str[0:8]+'/')
-            # zip_path = shutil.make_archive(output_zip_name, 'zip', root_dir=dir_in, base_dir=directory_name)
-            # print(f"Folder '{directory_name}' successfully zipped to '{zip_path}'")
-        except Exception as e:
-            print(f"Error zipping folder: {e}")
+            os.remove(aux_file)
+            print(f"File '{aux_file}' removed successfully.")
+        except OSError as e:
+            print(f"Error removing file '{aux_file}': {e}")
+    else:
+        print(f"File '{aux_file}' does not exist.")
+    destination_xml = os.path.join(directory_name, "c_gls_NDVI300_PROD-DESC_" + date_str + "_AFRI_OLCI_V2.0.1.xml")
+    ql_filename = thumbFilename.split('/')[-1] + ".tiff"
+    print("ql_filename: " + ql_filename)
+    print("destination_xml: " + destination_xml)
+    ##### XML ####
+    xml_file_path = os.path.join(dir_in, "CGLS_NDVI300_V2_S3_ProductSet_PDF.xml")
+    main_modify_XML(date_str, ql_filename, destination_xml, xml_file_path)
 
-        # Clean up dummy folder (optional)
-        shutil.rmtree(directory_name)
+    #### Zip the folder ###
+    output_zip_name = os.path.join(dir_out,os.path.splitext(os.path.basename(output_file))[0])
+    print("output_zip_name: " + output_zip_name)
+    try:
+        zip_files_with_prefix(directory_name, output_zip_name+'.zip', date_str[0:8]+'/')
+        # zip_path = shutil.make_archive(output_zip_name, 'zip', root_dir=dir_in, base_dir=directory_name)
+        # print(f"Folder '{directory_name}' successfully zipped to '{zip_path}'")
+    except Exception as e:
+        print(f"Error zipping folder: {e}")
+
+    # Clean up dummy folder (optional)
+    shutil.rmtree(directory_name)
