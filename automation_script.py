@@ -60,7 +60,7 @@ def run_ndvi_clipper(roi="AFRI"):
 
     # 2. Define the command to execute
     command = [
-        "python",
+        "python3",
         f"NDVI/clip_clms_NDVI_{roi}.py",
         full_argument
     ]
@@ -114,7 +114,7 @@ def run_dmp_clipper(roi="AFRI"):
 
     # 2. Define the command to execute
     command = [
-        "python",
+        "python3",
         f"DMP/clip_clms_DMP_{roi}.py",
         full_argument
     ]
@@ -201,7 +201,7 @@ def run_vegetation_properties_clipper(var="FAPAR", roi="AFRI"):
 
     # 2. Define the command to execute
     command = [
-        "python",
+        "python3",
         f"{var}/clip_clms_{var}_{roi}.py",  # Target script
         full_argument
     ]
