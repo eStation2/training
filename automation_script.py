@@ -73,7 +73,7 @@ def run_ndvi_clipper(roi="AFRI"):
     # 3. Execute the command using subprocess
     try:
         # Use subprocess.run to execute the command
-        # result = subprocess.run(command, check=True, capture_output=True, text=True)
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
 
         print("\nScript executed successfully.")
         # print(f"STDOUT:\n{result.stdout}") # Uncomment to see stdout
@@ -127,7 +127,7 @@ def run_dmp_clipper(roi="AFRI"):
     # 3. Execute the command using subprocess
     try:
         # Use subprocess.run to execute the command
-        # result = subprocess.run(command, check=True, capture_output=True, text=True)
+        result = subprocess.run(command, check=True, capture_output=True, text=True)
 
         print("\nScript executed successfully.")
         # print(f"STDOUT:\n{result.stdout}") # Uncomment to see stdout
@@ -213,7 +213,7 @@ def run_vegetation_properties_clipper(var="FAPAR", roi="AFRI"):
 
     # 3. Execute the command using subprocess
     try:
-        # subprocess.run(command, check=True, capture_output=True, text=True)
+        subprocess.run(command, check=True, capture_output=True, text=True)
         print("\nScript executed successfully.")
 
     except subprocess.CalledProcessError as e:
