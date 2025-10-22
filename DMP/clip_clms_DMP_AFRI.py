@@ -604,7 +604,7 @@ if __name__ == "__main__":
     # sys.argv[1] will be the first argument (the input directory)
     filepathname = sys.argv[1]
     dir_in = "/home/eouser/clms/DMP"
-    dir_out = "/home/eouser/clms/outputs/"
+    dir_out = "/home/eouser/clms/outputs/afr/"
     desired_width = 30240
     desired_height = 26880
     origin_lat = 40.0014880952380949 

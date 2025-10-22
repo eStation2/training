@@ -846,7 +846,7 @@ if __name__ == "__main__":
     # sys.argv[1] will be the first argument (the input directory)
     filepathname = sys.argv[1]
     dir_in = "/home/eouser/clms/NDVI"
-    dir_out = "/home/eouser/clms/outputs/"
+    dir_out = "/home/eouser/clms/outputs/afr/"
     # Ensure the directory path ends with a separator if it's not already
     if not dir_in.endswith(os.sep): dir_in += os.sep
     if not dir_out.endswith(os.sep): dir_out += os.sep
