@@ -836,15 +836,16 @@ def zip_files_with_prefix(source_directory, zip_file_name, prefix=""):
 #     thumbFilename="/data/ingest/clms/NDVI/255_c_gls_NDVI300_QL_202505010000_AFRI_OLCI_V2.0.1"
 #     thumbnail_view(output_file, thumbFilename)
 
-if __name__ == "__main__":
-    # Check if a directory argument was provided
-    if len(sys.argv) < 2:
-        print("Usage: python clip_clms_NDVI_AFRI.py <input_directory>")
-        sys.exit(1)
-
-    # sys.argv[0] is the script name itself ('clip_clms_NDVI_AFRI.py')
-    # sys.argv[1] will be the first argument (the input directory)
-    filepathname = sys.argv[1]
+# if __name__ == "__main__":
+def run_ndvi_afri_clipping(filepathname):
+    # # Check if a directory argument was provided
+    # if len(sys.argv) < 2:
+    #     print("Usage: python clip_clms_NDVI_AFRI.py <input_directory>")
+    #     sys.exit(1)
+    #
+    # # sys.argv[0] is the script name itself ('clip_clms_NDVI_AFRI.py')
+    # # sys.argv[1] will be the first argument (the input directory)
+    # filepathname = sys.argv[1]
     dir_in = "/home/eouser/clms/NDVI"
     dir_out = "/home/eouser/clms/outputs/afr/"
     # Ensure the directory path ends with a separator if it's not already
@@ -918,3 +919,22 @@ if __name__ == "__main__":
 
     # Clean up dummy folder (optional)
     shutil.rmtree(directory_name)
+    final_zip_path = output_zip_name + '.zip'
+    return final_zip_path
+
+# Keep the original main block for command-line execution compatibility, but call the new function.
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) < 2:
+        print("Usage: python clip_clms_NDVI_AFRI.py <input_directory>")
+        sys.exit(1)
+
+    filepathname = sys.argv[1]
+    try:
+        final_path = run_ndvi_afri_clipping(filepathname)
+        print(final_path)
+        sys.exit(0)
+    except Exception as e:
+        print(f"Execution failed: {e}")
+        sys.exit(1)

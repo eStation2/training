@@ -594,15 +594,8 @@ def zip_files_with_prefix(source_directory, zip_file_name, prefix=""):
     print(f"Zip file '{zip_file_name}' created successfully with prefixed files.")
 
 
-if __name__ == "__main__":
-    # Check if a directory argument was provided
-    if len(sys.argv) < 2:
-        print("Usage: python clip_clms_DMP_SOAM.py <input_directory>")
-        sys.exit(1)
-
-    # sys.argv[0] is the script name itself ('clip_clms_NDVI_AFRI.py')
-    # sys.argv[1] will be the first argument (the input directory)
-    filepathname = sys.argv[1]
+# Create a new function encapsulating the main logic
+def run_dmp_soam_clipping(filepathname):
     dir_in = "/home/eouser/clms/DMP"
     dir_out = "/home/eouser/clms/outputs/sam/"
     desired_width = 26880
@@ -706,3 +699,23 @@ if __name__ == "__main__":
 
     ## Clean up dummy folder (optional)
     shutil.rmtree(directory_name)
+    final_zip_path = output_zip_name + '.zip'
+    return final_zip_path
+
+
+# Keep the original main block for command-line execution compatibility, but call the new function.
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) < 2:
+        print("Usage: python clip_clms_DMP_SOAM.py <input_directory>")
+        sys.exit(1)
+
+    filepathname = sys.argv[1]
+    try:
+        final_path = run_dmp_soam_clipping(filepathname)
+        print(final_path)
+        sys.exit(0)
+    except Exception as e:
+        print(f"Execution failed: {e}")
+        sys.exit(1)

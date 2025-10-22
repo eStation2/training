@@ -2,18 +2,28 @@ import subprocess
 import datetime
 import os
 import logging
-from calendar import monthrange # Not used, but kept from original code
+from .DMP.clip_clms_DMP_AFRI import run_dmp_afri_clipping
+from .DMP.clip_clms_DMP_SOAM import run_dmp_soam_clipping
+from .NDVI.clip_clms_NDVI_AFRI import run_ndvi_afri_clipping
+from .NDVI.clip_clms_NDVI_SOAM import run_ndvi_soam_clipping
+from .FAPAR.clip_clms_FAPAR_AFRI import run_fapar_afri_clipping
+from .FAPAR.clip_clms_FAPAR_SOAM import run_fapar_soam_clipping
+from .FCOVER.clip_clms_FCOVER_AFRI import run_fcover_afri_clipping
+from .FCOVER.clip_clms_FCOVER_SOAM import run_fcover_soam_clipping
+from .LAI.clip_clms_LAI_AFRI import run_lai_afri_clipping
+from .LAI.clip_clms_LAI_SOAM import run_lai_soam_clipping
 
 # --- Configuration ---
-# PROCESSED_LIST_FILE = "/home/eouser/clms/config/processed_input_files.txt"
-# LOG_FILE = "/home/eouser/clms/logs/clipper_automation.log" # Common log file
-PROCESSED_LIST_FILE = "/data/processed_input_files.txt"
-LOG_FILE = "/data/clipper_automation.log" # Common log file
+PROCESSED_LIST_FILE = "/home/eouser/clms/config/processed_input_files.txt"
+PROCESSED_OUTPUT_LIST = "/home/eouser/clms/config/processed_output_files.txt"
+LOG_FILE = "/home/eouser/clms/logs/clipper_automation.log" # Common log file
+# PROCESSED_LIST_FILE = "/data/processed_input_files.txt"
+# LOG_FILE = "/data/clipper_automation.log" # Common log file
 # --- Logging Setup ---
 def setup_logging():
     """Configures the logging system to output to a file and the console."""
     logging.basicConfig(
-        level=logging.INFO, # Set base level to INFO
+        level=logging.DEBUG, # Set base level to INFO
         format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
             # Handler to write logs to a common file
@@ -118,9 +128,12 @@ def run_clipper_process(product_var, target_date, filename_base, base_dir_key, r
     # Construct the full filename (used for check and argument)
     filename = filename_base.format(year=year, month=month, day=day, var=product_var)
     full_argument = os.path.join(file_path_dir, filename)
-
     log_prefix = f"[{product_var}-{roi} | Target Date: {target_date.strftime('%Y-%m-%d')}]"
-
+    # --- NEW FILE EXISTENCE CHECK ---
+    if not os.path.exists(full_argument):
+        logging.error(f"{log_prefix} SKIP: Target Input File does NOT exist: '{full_argument}'")
+        return  # Exit the function if the file doesn't exist
+    # --------------------------------
     # --- CHECK if already processed ---
     processed_files = load_processed_list(PROCESSED_LIST_FILE)
 
@@ -132,25 +145,67 @@ def run_clipper_process(product_var, target_date, filename_base, base_dir_key, r
     logging.info(f"{log_prefix} Starting processing. Execution Date: {today.strftime('%Y-%m-%d')}")
     logging.info(f"{log_prefix} Target Input File: {full_argument}")
 
-    # 2. Define the command to execute
-    command = [
-        "python3",
-        f"{product_var}/clip_clms_{product_var}_{roi}.py",
-        full_argument
-    ]
+    # Map product/ROI to its direct function call
+    clipper_function = None
+    if product_var == "DMP" and roi == "AFRI":
+        clipper_function = run_dmp_afri_clipping
+    elif product_var == "DMP" and roi == "SOAM":
+        clipper_function = run_dmp_soam_clipping
+    # Add other conditions here for other products (NDVI-AFRI, FAPAR-SOAM, etc.)
+    elif product_var == "NDVI" and roi == "AFRI":
+        clipper_function = run_ndvi_afri_clipping
+    elif product_var == "NDVI" and roi == "SOAM":
+        clipper_function = run_ndvi_soam_clipping()
+    elif product_var == "FAPAR" and roi == "AFRI":
+        clipper_function = run_fapar_afri_clipping()
+    elif product_var == "FAPAR" and roi == "SOAM":
+        clipper_function = run_fapar_soam_clipping()
+    elif product_var == "FCOVER" and roi == "AFRI":
+        clipper_function = run_fcover_afri_clipping()
+    elif product_var == "FCOVER" and roi == "SOAM":
+        clipper_function = run_fcover_soam_clipping()
+    elif product_var == "LAI" and roi == "AFRI":
+        clipper_function = run_lai_afri_clipping()
+    elif product_var == "LAI" and roi == "SOAM":
+        clipper_function = run_lai_soam_clipping()
 
-    logging.info(f"{log_prefix} Executing command: {' '.join(command)}")
+    if not clipper_function:
+        logging.error(f"{log_prefix} No direct function call available for this product/ROI. Skipping.")
+        return
 
-    # 3. Execute the command using subprocess
+    logging.info(f"{log_prefix} Calling direct function: {clipper_function.__name__} for {full_argument}")
+
+    # 3. Execute the function directly
+
     try:
-        # check=True raises CalledProcessError on non-zero exit code
-        result = subprocess.run(command, check=True, capture_output=True, text=True)
-        # print(command)
-        # Log Success
-        logging.info(f"{log_prefix} Script executed successfully.")
-        # WRITE filename to processed list on SUCCESS
-        write_to_processed_list(PROCESSED_LIST_FILE, filename)
-        logging.debug(f"{log_prefix} STDOUT: {result.stdout.strip()}")
+        # 1. Execute the function
+        # The function must be modified to return the zip file path (as in Step 1)
+        zip_file_location = clipper_function(full_argument)
+
+        # Check 1: Success based on function call completing without exception
+        logging.info(f"{log_prefix} Script function executed successfully. Expected output: {zip_file_location}.")
+
+        # 2. Check if the generated zip file exists at the reported location
+        if os.path.exists(zip_file_location):
+            # A. Track the original input file (filename) as processed
+            write_to_processed_list(PROCESSED_LIST_FILE, filename)
+
+            # B. Track the successful output zip file
+            zip_filename_only = os.path.basename(zip_file_location)
+            write_to_processed_list(PROCESSED_OUTPUT_LIST, zip_filename_only)
+
+            logging.info(f"{log_prefix} SUCCESS: Output zip file found and lists updated: {zip_file_location}")
+
+        else:
+            # Check 2: Failure because the file wasn't created/found
+            logging.error(
+                f"{log_prefix} FAILURE: Function completed, but the expected zip file was NOT found at: {zip_file_location}")
+            logging.warning(f"{log_prefix} Processed lists were NOT updated due to missing output file.")
+
+    except Exception as e:
+        # Log any error raised by the called clipping function
+        logging.error(f"{log_prefix} Error executing function: {e}")
+        logging.warning(f"{log_prefix} Processed list was NOT updated due to function failure.")
 
     except subprocess.CalledProcessError as e:
         # Log Error details
